@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Western Artists: Lifespans</title>
+<style>
+:root{
+  --bg:#111111; --card:#333333; --text:#efe9dc; --muted:#a79f8f; --line:#4a4a4a;
+  --dutch:#d9a441; --old:#c0675a; --later:#6fa3a0;
+  --serif:"Cormorant Garamond","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--serif);font-size:18px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:56px 20px 80px}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:600;margin:0 0 8px;letter-spacing:.01em}
+.sub{color:var(--muted);margin:0 0 40px;font-style:italic}
+h2{font-size:1.5rem;font-weight:600;margin:56px 0 18px;display:flex;align-items:center;gap:12px}
+h2 i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-bottom:20px;color:var(--muted);font-size:.95rem}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:50%}
+
+/* overview timeline */
+.chart{background:var(--card);border-radius:10px;padding:18px 16px 14px;overflow-x:auto}
+.chart-inner{min-width:760px;position:relative}
+.axis{position:relative;height:26px;margin-left:190px;border-bottom:1px solid var(--line)}
+.tick{position:absolute;top:0;transform:translateX(-50%);font-size:.85rem;color:var(--muted)}
+.rows{position:relative}
+.grid{position:absolute;top:0;bottom:0;left:190px;right:0;pointer-events:none}
+.grid b{position:absolute;top:0;bottom:0;width:1px;background:var(--line);opacity:.6}
+.row{display:flex;align-items:center;height:38px;position:relative}
+.row .nm{width:190px;flex:none;display:flex;align-items:center;gap:10px;padding-right:10px;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .track{position:relative;flex:1;height:100%}
+.bar{position:absolute;top:50%;height:14px;transform:translateY(-50%);border-radius:7px}
+.bar.fuzz-s{border-top-left-radius:2px;border-bottom-left-radius:2px;opacity:.95}
+.bar span{position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 8px);font-size:.82rem;color:var(--muted);white-space:nowrap}
+.bar.right span{left:auto;right:calc(100% + 8px)}
+
+.av{width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:top;flex:none;background:#222;border:1px solid #555}
+.av.ph{display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--muted)}
+
+/* cards */
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
+.card{background:var(--card);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card .ph-img{aspect-ratio:4/5;width:100%;background:#222;position:relative}
+.card img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.card .initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem;color:#666}
+.card .body{padding:14px 16px 16px;border-top:3px solid var(--c)}
+.card h3{margin:0;font-size:1.2rem;font-weight:600;line-height:1.25}
+.card .yrs{font-size:1.05rem;color:var(--text);margin-top:4px}
+.card .age{color:var(--muted);font-size:.92rem;font-style:italic}
+.mini{position:relative;height:6px;background:#444;border-radius:3px;margin-top:12px}
+.mini i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--c)}
+@media (max-width:520px){body{font-size:17px}.grid-cards{grid-template-columns:repeat(2,1fr);gap:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Western Artists</h1>
+  <p class="sub">When each artist was alive, 1450 to 1980</p>
+
+  <div class="legend" id="legend"></div>
+  <div class="chart"><div class="chart-inner" id="chart"></div></div>
+
+  <div id="groups"></div>
+</div>
+
+<script>
+const IMG = "images/";
+const START = 1450, END = 1980;
+
+const GROUPS = {
+  dutch: {label:"Dutch Golden Age", color:"var(--dutch)"},
+  old:   {label:"Other Old Masters", color:"var(--old)"},
+  later: {label:"Later giants", color:"var(--later)"}
+};
+
+// approx: true shows "c." before the birth year
+const artists = [
+  {name:"Johannes Vermeer", b:1632, d:1675, g:"dutch", f:"johannes-vermeer.jpg"},
+  {name:"Frans Hals", b:1582, d:1666, g:"dutch", f:"frans-hals.jpg", approx:true},
+  {name:"Rembrandt", b:1606, d:1669, g:"dutch", f:"Rembrandt.webp"},
+
+  {name:"Leonardo da Vinci", b:1452, d:1519, g:"old", f:"leonardo-da-vinci.jpg"},
+  {name:"Michelangelo", b:1475, d:1564, g:"old", f:"michelangelo.jpeg"},
+  {name:"Raphael", b:1483, d:1520, g:"old", f:"raphael.jpg"},
+  {name:"Caravaggio", b:1571, d:1610, g:"old", f:"Bild-Ottavio_Leoni,_Caravaggio.jpg"},
+  {name:"Diego Velázquez", b:1599, d:1660, g:"old", f:"Diego Velázquez.jpeg"},
+  {name:"Peter Paul Rubens", b:1577, d:1640, g:"old", f:"Peter Paul Rubens.jpg"},
+  {name:"Titian", b:1488, d:1576, g:"old", f:"Titian.jpg", approx:true},
+
+  {name:"Francisco Goya", b:1746, d:1828, g:"later", f:"Francisco Goya.jpg"},
+  {name:"J.M.W. Turner", b:1775, d:1851, g:"later", f:"J.M.W. Turner.jpg"},
+  {name:"Vincent van Gogh", b:1853, d:1890, g:"later", f:"Vincent van Gogh.webp"},
+  {name:"Claude Monet", b:1840, d:1926, g:"later", f:"Claude Monet.webp"},
+  {name:"Pablo Picasso", b:1881, d:1973, g:"later", f:"Pablo Picasso.jpg"}
+].sort((a,b)=>a.b-b.b);
+
+const pct = y => ((y-START)/(END-START))*100;
+const yrs = a => `${a.approx?"c. ":""}${a.b}\u2013${a.d}`;
+const initials = n => n.split(" ").map(w=>w[0]).slice(0,2).join("");
+const src = f => IMG + encodeURI(f);
+
+function avatar(a){
+  const img = document.createElement("img");
+  img.className = "av"; img.alt = ""; img.src = src(a.f); img.loading = "lazy";
+  img.onerror = () => { const s=document.createElement("span"); s.className="av ph"; s.textContent=initials(a.name); img.replaceWith(s); };
+  return img;
+}
+
+// legend
+const legend = document.getElementById("legend");
+Object.values(GROUPS).forEach(g=>{
+  legend.insertAdjacentHTML("beforeend", `<span><i style="background:${g.color}"></i>${g.label}</span>`);
+});
+
+// overview chart
+const chart = document.getElementById("chart");
+const axis = document.createElement("div"); axis.className = "axis";
+const rows = document.createElement("div"); rows.className = "rows";
+const grid = document.createElement("div"); grid.className = "grid";
+for(let y=1500;y<=1900;y+=100){
+  axis.insertAdjacentHTML("beforeend", `<span class="tick" style="left:${pct(y)}%">${y}</span>`);
+  grid.insertAdjacentHTML("beforeend", `<b style="left:${pct(y)}%"></b>`);
+}
+rows.appendChild(grid);
+artists.forEach(a=>{
+  const row = document.createElement("div"); row.className = "row";
+  const nm = document.createElement("div"); nm.className = "nm";
+  nm.appendChild(avatar(a)); nm.append(a.name);
+  const track = document.createElement("div"); track.className = "track";
+  const left = pct(a.b), width = pct(a.d)-pct(a.b);
+  const bar = document.createElement("div");
+  bar.className = "bar" + (left > 70 ? " right" : "");
+  bar.style.cssText = `left:${left}%;width:${width}%;background:${GROUPS[a.g].color}`;
+  bar.innerHTML = `<span>${yrs(a)}</span>`;
+  track.appendChild(bar);
+  row.append(nm, track); rows.appendChild(row);
+});
+chart.append(axis, rows);
+
+// grouped cards
+const groupsEl = document.getElementById("groups");
+Object.entries(GROUPS).forEach(([key,g])=>{
+  const list = artists.filter(a=>a.g===key);
+  const sec = document.createElement("section");
+  sec.innerHTML = `<h2><i style="background:${g.color}"></i>${g.label}</h2>`;
+  const grid = document.createElement("div"); grid.className = "grid-cards";
+  list.forEach(a=>{
+    const card = document.createElement("article"); card.className = "card";
+    card.style.setProperty("--c", g.color);
+    const wrap = document.createElement("div"); wrap.className = "ph-img";
+    const img = document.createElement("img");
+    img.alt = `Portrait of ${a.name}`; img.src = src(a.f); img.loading = "lazy";
+    img.onerror = () => { img.remove(); wrap.innerHTML = `<div class="initials">${initials(a.name)}</div>`; };
+    wrap.appendChild(img);
+    const age = a.d - a.b;
+    const body = document.createElement("div"); body.className = "body";
+    body.innerHTML = `<h3>${a.name}</h3>
+      <div class="yrs">${yrs(a)}</div>
+      <div class="age">lived about ${age} years</div>
+      <div class="mini"><i style="left:${pct(a.b)}%;width:${pct(a.d)-pct(a.b)}%"></i></div>`;
+    card.append(wrap, body); grid.appendChild(card);
+  });
+  sec.appendChild(grid); groupsEl.appendChild(sec);
+});
+</script>
+</body>
+</html>
