@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M.Des Prep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=DM+Sans:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e16;
+    --accent: #8b9cff;
+    --ink: #eef0f7;
+    --muted: #8a8fa3;
+    --line: rgba(255, 255, 255, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "DM Sans", "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Top quarter of the viewport: title band on a drafting grid */
+  header {
+    position: relative;
+    height: 25vh;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    padding: 0 clamp(1.25rem, 6vw, 5rem);
+    border-bottom: 1px solid var(--line);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Segoe UI", sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.2rem, 7vw, 4.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .back {
+    position: absolute;
+    top: 1rem;
+    left: clamp(1.25rem, 6vw, 5rem);
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .back:hover, .back:focus-visible { color: var(--ink); }
+  .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  main {
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 6vw, 5rem) 4rem;
+  }
+
+  /* small dash, white at 5% opacity */
+  .dash {
+    width: 72px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 1.75rem;
+  }
+
+  .chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .chip {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--ink);
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .chip:hover, .chip:focus-visible {
+    border-color: var(--accent);
+    background: rgba(139, 156, 255, 0.12);
+  }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .chip { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="index.html">Back to directory</a>
+  <h1>M.Des Prep</h1>
+</header>
+
+<main>
+  <div class="dash"></div>
+  <!-- Replace these with your real topics and pages. Copy an <li> to add more. -->
+  <ul class="chips">
+    <li><a class="chip" href="\part-a\famous-painters-and-their-artworks\rembrandt\index.html">Rembrandt Paintings</a></li>
+  </ul>
+</main>
+
+</body>
+</html>

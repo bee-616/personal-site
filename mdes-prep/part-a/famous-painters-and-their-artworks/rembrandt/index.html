@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top 10 Famous Paintings of Rembrandt</title>
+<style>
+:root{--bg:#262626;--card:#3d3d3d;--ink:#ececec;--muted:#b5b5b5;--accent:#e0b46c;--line:#525252;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 Georgia,"Times New Roman",serif}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 60px}
+header{padding:56px 0 24px;text-align:center;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.15;margin:0 0 12px;color:var(--accent)}
+.sub{color:var(--muted);font-style:italic;margin:0}
+h2{font-size:1.9rem;margin:48px 0 20px;color:var(--accent)}
+h3{font-size:1.25rem;margin:28px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.img{aspect-ratio:4/3;background:#2f2f2f;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.img span{color:#b5b5b5;font:14px sans-serif;padding:10px;text-align:center}
+.body{padding:14px 16px 18px}
+.num{font:700 .8rem sans-serif;letter-spacing:.08em;color:var(--accent)}
+.body h3{margin:4px 0 4px;font-size:1.1rem;line-height:1.3}
+.meta{font:.85rem sans-serif;color:var(--muted);margin:0 0 8px}
+.body p{margin:0;font-size:.95rem}
+.note{margin-top:22px;color:var(--muted)}
+ul{padding-left:22px}
+li{margin:8px 0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 24px 18px;margin:16px 0}
+footer{margin-top:40px;font:.85rem sans-serif;color:var(--muted);text-align:center}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Top 10 Famous Paintings of Rembrandt</h1>
+  <p class="sub">A quick guide to Rembrandt’s most famous works.</p>
+</header>
+
+<h2>Top 10 Famous Rembrandt Paintings</h2>
+<div class="grid" id="grid"></div>
+<p class="note">Other strong contenders include <em>Aristotle with a Bust of Homer</em>, <em>Danaë</em>, and <em>The Blinding of Samson</em>.</p>
+
+<h2>How to Identify a Rembrandt Painting</h2>
+<p>Authenticating a Rembrandt is notoriously difficult, even for experts. The Rembrandt Research Project spent decades reattributing works, demoting many paintings once thought to be his. Here is what specialists look for.</p>
+
+<div class="panel">
+<h3>Stylistic Hallmarks</h3>
+<ul>
+  <li><strong>Chiaroscuro and tenebrism:</strong> Strong contrast between light and deep shadow, with figures emerging from darkness. Light is often a warm, golden glow falling on faces.</li>
+  <li><strong>Psychological depth:</strong> The sitters look like real, thinking, feeling people, with subtle, introspective expressions rather than stiff poses.</li>
+  <li><strong>Varied brushwork:</strong> Smooth, delicate detail in faces and hands, contrasted with loose, thick, almost sculptural paint (impasto) in clothing, jewelry, and highlights. His late work is especially rough and expressive.</li>
+  <li><strong>Earthy palette:</strong> Browns, ochres, deep reds, and golds, with restrained use of bright colors.</li>
+  <li><strong>Edges that dissolve:</strong> Forms blend softly into shadow rather than being sharply outlined.</li>
+</ul>
+</div>
+
+<footer>Images from Wikipedia / Wikimedia Commons (public domain artworks). See the
+<a href="https://en.wikipedia.org/wiki/List_of_paintings_by_Rembrandt" target="_blank" rel="noopener">List of paintings by Rembrandt</a>.
+</footer>
+</div>
+
+<script>
+// f = file name inside the Rembrandt-paintings folder (next to this HTML file)
+const paintings = [
+  {t:"The Night Watch", y:"1642", f:"the-night-watch-1642-Rembrandt.jpg", d:"His largest and most celebrated work, a dynamic group portrait of a militia company.", m:"Rijksmuseum, Amsterdam"},
+  {t:"The Anatomy Lesson of Dr. Nicolaes Tulp", y:"1632", f:"the-anatomy-lesson-of-dr.nicholaes-tulp-1632.jpg", d:"The breakthrough painting that established his reputation in Amsterdam.", m:"Mauritshuis, The Hague"},
+  {t:"The Return of the Prodigal Son", y:"c. 1668", f:"the-return-of-the-prodigal-son-1668.jpg", d:"A deeply moving late work about forgiveness.", m:"Hermitage Museum, St. Petersburg"},
+  {t:"The Jewish Bride", y:"c. 1665–69", f:"the-jewish-bride-1665-69.jpg", d:"A tender portrait of a couple, known for its thick, glowing paint.", m:"Rijksmuseum, Amsterdam"},
+  {t:"Self-Portrait with Two Circles", y:"c. 1665–69", f:"self-portrait-with-two-circles-c.1665-69.jpg", d:"Perhaps the most powerful of his many self-portraits.", m:"Kenwood House, London"},
+  {t:"The Storm on the Sea of Galilee", y:"1633", f:"the-storm-on-the-sea-of-galilee-1633.jpg", d:"His only seascape, stolen in the 1990 Isabella Stewart Gardner Museum heist and still missing.", m:"Stolen, 1990"},
+  {t:"Belshazzar’s Feast", y:"c. 1636–38", f:"belshazzar's-feast-c.1636-38.jpg", d:"A dramatic biblical scene of the writing on the wall.", m:"National Gallery, London"},
+  {t:"The Syndics of the Drapers’ Guild", y:"1662", f:"the-syndics-of-the-drapers-guild-1622.jpg", d:"A masterful group portrait of cloth merchants.", m:"Rijksmuseum, Amsterdam"},
+  {t:"Bathsheba at Her Bath", y:"1654", f:"bathsheba-at-her-bath-1654.jpg", d:"A psychologically rich nude based on the biblical story.", m:"Louvre, Paris"},
+  {t:"The Anatomy Lesson of Dr. Deijman", y:"1656", f:"the-anatomy-lesson-of-dr.deijman-1656.jpg", d:"Only a fragment survives after a fire, but it remains striking.", m:"Amsterdam Museum"}
+];
+
+const grid = document.getElementById("grid");
+paintings.forEach((p, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML =
+    '<div class="img"><span>Loading image…</span></div>' +
+    '<div class="body"><div class="num">' + (i + 1) + '</div>' +
+    '<h3>' + p.t + '</h3>' +
+    '<p class="meta">' + p.y + ' · ' + p.m + '</p>' +
+    '<p>' + p.d + '</p></div>';
+  grid.appendChild(card);
+  const box = card.querySelector(".img");
+  const img = new Image();
+  img.alt = p.t + " (" + p.y + ")";
+  img.onload = () => { box.innerHTML = ""; box.appendChild(img); };
+  img.onerror = () => { box.innerHTML = "<span>Missing: Rembrandt-paintings/" + p.f + "</span>"; };
+  img.src = "Rembrandt-paintings/" + encodeURI(p.f);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Work</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&family=Share+Tech+Mono&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #141414;
+    --yellow: #ffc800;
+    --grey: #b8b8b8;
+    --ink: #f1f1f1;
+    --muted: #8d8d8d;
+    --cut: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Chakra Petch", "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Top quarter of the viewport: title band */
+  header {
+    height: 25vh;
+    min-height: 150px;
+    padding: 1rem clamp(1.25rem, 6vw, 5rem);
+    display: flex;
+    align-items: stretch;
+  }
+  .title-frame {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+    background: var(--grey);
+    clip-path: polygon(0 0, calc(100% - 40px) 0, 100% 40px, 100% 100%, 40px 100%, 0 calc(100% - 40px));
+  }
+  .title-frame::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--bg);
+    clip-path: polygon(0 0, calc(100% - 39px) 0, 100% 39px, 100% 100%, 39px 100%, 0 calc(100% - 39px));
+  }
+  /* slanted accent bars along the bottom edge */
+  .title-frame::after {
+    content: "";
+    position: absolute;
+    left: 60px; bottom: 0;
+    width: 96px; height: 8px;
+    background: repeating-linear-gradient(115deg, var(--grey) 0 8px, transparent 8px 16px);
+  }
+  .title-text { position: relative; z-index: 1; min-width: 0; }
+  h1 {
+    font-weight: 600;
+    font-size: clamp(1.7rem, 5vw, 3.4rem);
+    letter-spacing: 0.12em;
+    line-height: 1.1;
+  }
+  .name-line {
+    margin-top: 0.4rem;
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: clamp(0.85rem, 2vw, 1.15rem);
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .title-image {
+    position: absolute;
+    z-index: 1;
+    top: 2px; right: 2px;
+    height: calc(100% - 4px);                      /* fills the band */
+    width: calc(max(25vh, 150px) - 2rem - 2px);    /* equal to the height = square */
+    object-fit: cover;                             /* crops instead of stretching */
+    background: var(--panel);
+    border-left: 2px solid var(--grey);
+    clip-path: polygon(0 0, calc(100% - 39px) 0, 100% 39px, 100% 100%, 0 100%);
+  }
+  @media (max-width: 600px) { .title-image { display: none; } }
+
+  /* Remaining space: directions to other pages */
+  main {
+    padding: clamp(1rem, 3vw, 2.5rem) clamp(1.25rem, 6vw, 5rem) 4rem;
+  }
+  ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 14px; }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.6rem 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem 1.1rem 1.25rem;
+    color: var(--ink);
+    text-decoration: none;
+    background: var(--yellow);
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  }
+  /* dark fill leaves a thin yellow outline */
+  .row::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--panel);
+    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+    transition: background 0.15s ease;
+  }
+  .row > * { position: relative; z-index: 1; }
+
+  .num {
+    font-family: "Roboto Mono", ui-monospace, monospace;
+    font-feature-settings: "zero" 1;
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--yellow);
+  }
+  .name {
+    display: block;
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    color: var(--yellow);
+  }
+  .desc { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
+  .tag {
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    background: var(--ink);
+    color: #000;
+    padding: 0.2rem 0.55rem;
+  }
+  .tag.upcoming { background: #4a4a4a; color: #d4d4d4; }
+
+  /* Hover: faint yellow tint, white text */
+  .row:not(.disabled):hover::before, .row:not(.disabled):focus-visible::before {
+    background: linear-gradient(rgba(255, 200, 0, 0.06), rgba(255, 200, 0, 0.06)), var(--panel);
+  }
+  .row:not(.disabled):hover .name, .row:not(.disabled):focus-visible .name { color: #fff; }
+  .row:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .row.disabled { opacity: 0.35; cursor: not-allowed; }
+  @media (prefers-reduced-motion: reduce) { .row::before { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-frame">
+    <div class="title-text">
+      <h1>MY WORK</h1>
+      <p class="name-line">Bazim Nubail A Z</p>
+    </div>
+    <!-- Update this path once your image is ready -->
+    <img class="title-image" src="title-image.jpg" alt="">
+  </div>
+</header>
+
+<main>
+  <ul>
+    <!-- Replace these with your real pages. Copy a <li> block to add more. -->
+    <li><a class="row" href="\mdes-prep\index.html"><span class="num">01</span><span><span class="name">M.Des Preparation</span><span class="desc">Short description of what's here</span></span><span class="tag">LIVE</span></a></li>
+    <!-- Disabled for now: to enable, change <div> to <a href="..."> and remove "disabled" -->
+    <li><div class="row disabled" aria-disabled="true"><span class="num">02</span><span><span class="name">PROJECT_TWO</span><span class="desc">Short description of what's here</span></span><span class="tag upcoming">UPCOMING</span></div></li>
+    <li><div class="row disabled" aria-disabled="true"><span class="num">03</span><span><span class="name">PROJECT_THREE</span><span class="desc">Short description of what's here</span></span><span class="tag upcoming">UPCOMING</span></div></li>
+  </ul>
+</main>
+
+</body>
+</html>
