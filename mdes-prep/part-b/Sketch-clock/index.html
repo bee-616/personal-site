@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sketch Clock — Drawing Practice Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #17151b;
+    --bg-panel: #201d24;
+    --bg-panel-2: #29252d;
+    --paper: #ece6d9;
+    --muted: #9a9388;
+    --accent: #b5493a;
+    --accent-soft: rgba(181,73,58,0.16);
+    --accent-2: #5b7a94;
+    --line: #3a353d;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg);
+    color: var(--paper);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { overflow: hidden; }
+  button { font-family: inherit; }
+  ::selection { background: var(--accent-soft); }
+
+  .screen {
+    position: fixed; inset: 0;
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  .screen.active { display: flex; }
+
+  /* ---------- Shared bits ---------- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel-2);
+    color: var(--paper);
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover { border-color: #57515c; background: #302b34; }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff5f2;
+  }
+  .btn-primary:hover { background: #c85a49; border-color: #c85a49; }
+  .btn-primary:disabled, .btn:disabled {
+    opacity: 0.35; cursor: not-allowed; transform: none;
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+  }
+  .btn-ghost:hover { color: var(--paper); background: var(--bg-panel-2); }
+
+  /* ---------- Setup screen ---------- */
+  #screen-setup { align-items: center; justify-content: flex-start; overflow-y: auto; }
+  .setup-wrap {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 28px 80px;
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px;
+  }
+  .brand-mark {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--accent);
+    position: relative; flex: none;
+  }
+  .brand-mark::after{
+    content:''; position:absolute; top:50%; left:50%; width:1px; height:7px;
+    background: var(--accent); transform-origin: bottom center; transform: translate(-50%,-100%) rotate(35deg);
+  }
+  h1.title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .tagline { color: var(--muted); font-size: 15px; margin: 4px 0 40px; max-width: 46ch; }
+
+  .card {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .num { color: var(--accent); }
+
+  .source-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .source-row .sep { color: var(--muted); font-size: 13px; }
+  .file-input-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .link-btn {
+    background: none; border: none; color: var(--accent-2);
+    font-size: 13px; text-decoration: underline; text-underline-offset: 3px;
+    cursor: pointer; padding: 4px 0;
+  }
+  .link-btn:hover { color: #7fa2bc; }
+
+  .thumb-summary {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 18px; margin-bottom: 4px;
+  }
+  .thumb-count { font-family: var(--font-mono); font-size: 13px; color: var(--paper); }
+  .thumb-count b { color: var(--accent); font-weight: 600; }
+  .thumb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 4px 2px;
+    margin-top: 12px;
+  }
+  .thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb.deselected { opacity: 0.28; }
+  .thumb.deselected::after {
+    content: '✕';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 20px; background: rgba(0,0,0,0.4);
+  }
+  .thumb:hover { border-color: var(--accent-2); }
+
+  .empty-note {
+    color: var(--muted); font-size: 13px; padding: 20px 4px; text-align: center;
+    border: 1px dashed var(--line); border-radius: 4px; margin-top: 12px;
+  }
+
+  .preset-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .preset {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .preset:hover { border-color: var(--accent-2); }
+  .preset.active { border-color: var(--accent); background: var(--accent-soft); color: var(--paper); }
+  .custom-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .custom-row.hidden { display: none; }
+  .custom-row input[type=number] {
+    width: 64px; background: var(--bg); border: 1px solid var(--line); color: var(--paper);
+    border-radius: 3px; padding: 8px; font-family: var(--font-mono); font-size: 14px; text-align: center;
+  }
+  .custom-row input[type=number]:focus { outline: 1px solid var(--accent-2); }
+  .warn-text { color: var(--accent); font-size: 12px; margin-top: 8px; font-family: var(--font-mono); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-desc { font-size: 13px; color: var(--muted); max-width: 40ch; }
+  .switch {
+    position: relative; width: 52px; height: 28px; border-radius: 14px;
+    background: var(--bg); border: 1px solid var(--line); cursor: pointer; flex: none;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--muted); transition: transform 0.18s ease, background 0.18s ease;
+  }
+  .switch.on { border-color: var(--accent-2); }
+  .switch.on::after { transform: translateX(24px); background: var(--accent-2); }
+
+  .start-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 8px; }
+  .start-bar .summary { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+  .start-bar .btn-primary { font-size: 15px; padding: 13px 28px; }
+
+  /* ---------- Session (playback) screen ---------- */
+  #screen-session { background: #0d0c10; }
+  .stage {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .stage img {
+    max-width: 92%; max-height: 92%;
+    object-fit: contain;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .stage-hint {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+    color: var(--muted); text-transform: uppercase; pointer-events: none;
+  }
+
+  .ring-wrap {
+    position: absolute; top: 18px; right: 20px;
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(23,21,27,0.72);
+    border: 1px solid var(--line);
+    border-radius: 40px;
+    padding: 8px 16px 8px 8px;
+    backdrop-filter: blur(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .ring-svg { width: 52px; height: 52px; transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--line); stroke-width: 4; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke 0.2s; }
+  .ring-fill.low { stroke: #d4735f; }
+  .timer-text { font-family: var(--font-mono); font-size: 17px; letter-spacing: 0.02em; min-width: 52px; }
+  .progress-note { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+  .toolbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 18px;
+    background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .toolbar.hidden { opacity: 0; transform: translateY(12px); pointer-events: none; }
+  .tool-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(32,29,36,0.85);
+    color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .tool-btn:hover { border-color: var(--accent-2); background: var(--bg-panel-2); }
+  .tool-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .tool-btn.primary { width: 52px; height: 52px; background: var(--accent); border-color: var(--accent); font-size: 18px; }
+  .tool-btn.primary:hover { background: #c85a49; }
+  .tool-btn svg { width: 18px; height: 18px; }
+  .tool-btn.primary svg { width: 20px; height: 20px; }
+
+  .exit-corner {
+    position: absolute; top: 18px; left: 20px;
+    transition: opacity 0.35s ease;
+  }
+  .exit-corner.hidden { opacity: 0; pointer-events: none; }
+
+  /* ---------- End screen ---------- */
+  #screen-end { align-items: center; justify-content: center; }
+  .end-card {
+    text-align: center; max-width: 440px; padding: 40px;
+  }
+  .end-card .eyebrow { display: block; margin-bottom: 10px; }
+  .end-card h2 {
+    font-family: var(--font-display); font-size: 30px; font-weight: 600; margin: 0 0 28px;
+  }
+  .stat-row { display: flex; justify-content: center; gap: 40px; margin-bottom: 36px; }
+  .stat { text-align: center; }
+  .stat .num { font-family: var(--font-mono); font-size: 30px; color: var(--accent); display: block; }
+  .stat .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .end-actions { display: flex; flex-direction: column; gap: 10px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 640px) {
+    .setup-wrap { padding: 32px 16px 60px; }
+    h1.title { font-size: 26px; }
+    .stat-row { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP SCREEN ============ -->
+<div id="screen-setup" class="screen active">
+  <div class="setup-wrap">
+    <div class="brand"><span class="brand-mark"></span><h1 class="title">Sketch Clock</h1></div>
+    <p class="tagline">A timed drawing‑practice session built from your own reference images. Nothing leaves your computer.</p>
+
+    <div class="card">
+      <h2><span class="num">01</span> Choose your images</h2>
+      <div class="source-row" id="source-row"></div>
+      <div class="thumb-summary" id="thumb-summary" style="display:none;">
+        <span class="thumb-count" id="thumb-count"></span>
+        <button class="link-btn" id="clear-selection-btn">Clear folder</button>
+      </div>
+      <div class="thumb-grid" id="thumb-grid"></div>
+      <div class="empty-note" id="empty-note">No images loaded yet — pick a folder above to see them here.</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">02</span> Set the duration</h2>
+      <div class="preset-row" id="preset-row"></div>
+      <div class="custom-row hidden" id="custom-row">
+        <input type="number" min="0" id="custom-min" placeholder="0" aria-label="Minutes"> <span class="progress-note">min</span>
+        <input type="number" min="0" max="59" id="custom-sec" placeholder="30" aria-label="Seconds"> <span class="progress-note">sec</span>
+      </div>
+      <div class="warn-text" id="duration-warn" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">03</span> Play order</h2>
+      <div class="toggle-row">
+        <div>
+          <div style="font-size:14px; margin-bottom:2px;" id="order-label">Sequential — folder order</div>
+          <div class="toggle-desc">Switch on to shuffle images randomly, with no repeats until the set cycles.</div>
+        </div>
+        <div class="switch" id="shuffle-switch" role="switch" aria-checked="false" tabindex="0" aria-label="Toggle shuffle order"></div>
+      </div>
+    </div>
+
+    <div class="start-bar">
+      <span class="summary" id="start-summary">Load images to begin</span>
+      <button class="btn btn-primary" id="start-btn" disabled>Start session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SESSION (PLAYBACK) SCREEN ============ -->
+<div id="screen-session" class="screen">
+  <div class="stage" id="stage">
+    <img id="stage-img" alt="Reference drawing subject">
+    <div class="stage-hint" id="stage-hint"></div>
+
+    <div class="exit-corner" id="exit-corner">
+      <button class="tool-btn" id="exit-btn" title="Exit session (Esc)" aria-label="Exit session">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="ring-wrap" id="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 60 60">
+        <circle class="ring-track" cx="30" cy="30" r="26"></circle>
+        <circle class="ring-fill" id="ring-fill" cx="30" cy="30" r="26"></circle>
+      </svg>
+      <div>
+        <div class="timer-text" id="timer-text">00:00</div>
+        <div class="progress-note" id="progress-note">1 / 1</div>
+      </div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <button class="tool-btn" id="back-btn" title="Previous (←)" aria-label="Previous image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20L9 12l10-8v16z"/><path d="M5 4v16"/></svg>
+      </button>
+      <button class="tool-btn primary" id="pause-btn" title="Pause / resume (Space)" aria-label="Pause or resume">
+        <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M7 4l14 8-14 8V4z"/></svg>
+      </button>
+      <button class="tool-btn" id="next-btn" title="Skip (→)" aria-label="Next image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8V4z"/><path d="M19 4v16"/></svg>
+      </button>
+      <button class="tool-btn" id="restart-btn" title="Restart this image's timer" aria-label="Restart timer for current image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      </button>
+      <button class="tool-btn" id="fullscreen-btn" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ END SCREEN ============ -->
+<div id="screen-end" class="screen">
+  <div class="end-card">
+    <span class="eyebrow">Session complete</span>
+    <h2>Good work.</h2>
+    <div class="stat-row">
+      <div class="stat"><span class="num" id="end-count">0</span><span class="label">Images viewed</span></div>
+      <div class="stat"><span class="num" id="end-time">0:00</span><span class="label">Time drawing</span></div>
+    </div>
+    <div class="end-actions">
+      <button class="btn btn-primary" id="restart-same-btn">Restart same set</button>
+      <button class="btn" id="new-shuffle-btn">New shuffle</button>
+      <button class="btn btn-ghost" id="back-to-folder-btn">Back to folder selection</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" class="file-input-hidden" id="dir-fallback-input" webkitdirectory multiple>
+<input type="file" class="file-input-hidden" id="files-input" multiple accept="image/*">
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- State ---------------- */
+  var allFiles = [];          // every image file found in the folder/selection, sorted by name
+  var excluded = new Set();   // indices into allFiles the user deselected
+  var selectedFiles = [];     // allFiles minus excluded, built at Start
+  var order = [];             // indices into selectedFiles, in play order
+  var pos = 0;                // position within `order`
+  var duration = 120;         // seconds per image
+  var shuffleOn = false;
+
+  var urlCache = new Map();   // pos -> {rawUrl, extraBlobUrl, url}
+  var remainingMs = duration * 1000;
+  var lastFrameTime = null;
+  var paused = true;
+  var rafId = null;
+  var visited = new Set();
+  var playedMs = 0;
+  var lastRingR = 26;
+
+  var inactivityTimer = null;
+
+  var IMAGE_EXT = /\.(jpe?g|png|webp|gif|bmp)$/i;
+
+  /* ---------------- Element refs ---------------- */
+  var screens = {
+    setup: document.getElementById('screen-setup'),
+    session: document.getElementById('screen-session'),
+    end: document.getElementById('screen-end')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('active', k === name); });
+  }
+
+  var sourceRow = document.getElementById('source-row');
+  var thumbGrid = document.getElementById('thumb-grid');
+  var thumbSummary = document.getElementById('thumb-summary');
+  var thumbCount = document.getElementById('thumb-count');
+  var emptyNote = document.getElementById('empty-note');
+  var clearBtn = document.getElementById('clear-selection-btn');
+  var startBtn = document.getElementById('start-btn');
+  var startSummary = document.getElementById('start-summary');
+
+  var presetRow = document.getElementById('preset-row');
+  var customRow = document.getElementById('custom-row');
+  var customMin = document.getElementById('custom-min');
+  var customSec = document.getElementById('custom-sec');
+  var durationWarn = document.getElementById('duration-warn');
+
+  var orderLabel = document.getElementById('order-label');
+  var shuffleSwitch = document.getElementById('shuffle-switch');
+
+  var stageImg = document.getElementById('stage-img');
+  var stageHint = document.getElementById('stage-hint');
+  var timerText = document.getElementById('timer-text');
+  var progressNote = document.getElementById('progress-note');
+  var ringFill = document.getElementById('ring-fill');
+  var ringWrap = document.getElementById('ring-wrap');
+  var toolbar = document.getElementById('toolbar');
+  var exitCorner = document.getElementById('exit-corner');
+  var backBtn = document.getElementById('back-btn');
+  var nextBtn = document.getElementById('next-btn');
+  var pauseBtn = document.getElementById('pause-btn');
+  var pauseIcon = document.getElementById('pause-icon');
+  var playIcon = document.getElementById('play-icon');
+  var restartBtn = document.getElementById('restart-btn');
+  var fullscreenBtn = document.getElementById('fullscreen-btn');
+  var exitBtn = document.getElementById('exit-btn');
+  var stageEl = document.getElementById('stage');
+
+  var endCount = document.getElementById('end-count');
+  var endTime = document.getElementById('end-time');
+  var restartSameBtn = document.getElementById('restart-same-btn');
+  var newShuffleBtn = document.getElementById('new-shuffle-btn');
+  var backToFolderBtn = document.getElementById('back-to-folder-btn');
+
+  var dirFallbackInput = document.getElementById('dir-fallback-input');
+  var filesInput = document.getElementById('files-input');
+
+  var ringCircumference = 2 * Math.PI * lastRingR;
+  ringFill.style.strokeDasharray = ringCircumference.toFixed(2);
+
+  /* ---------------- Utilities ---------------- */
+  function naturalCompare(a, b){
+    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+  }
+  function isImageFile(name){ return IMAGE_EXT.test(name); }
+  function isGif(file){ return file.type === 'image/gif' || /\.gif$/i.test(file.name); }
+  function formatMMSS(totalSeconds){
+    totalSeconds = Math.max(0, Math.round(totalSeconds));
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function formatLongTime(totalSeconds){
+    totalSeconds = Math.max(0, Math.round(totalSeconds));
+    var h = Math.floor(totalSeconds / 3600);
+    var m = Math.floor((totalSeconds % 3600) / 60);
+    var s = totalSeconds % 60;
+    if (h > 0) return h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  /* ---------------- Source selection (capability detection) ---------------- */
+  function buildSourceRow(){
+    sourceRow.innerHTML = '';
+    if (window.showDirectoryPicker) {
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.textContent = 'Select folder…';
+      btn.addEventListener('click', pickFolderModern);
+      sourceRow.appendChild(btn);
+
+      var sep = document.createElement('span');
+      sep.className = 'sep';
+      sep.textContent = 'or';
+      sourceRow.appendChild(sep);
+
+      var link = document.createElement('button');
+      link.className = 'link-btn';
+      link.textContent = 'choose files instead';
+      link.addEventListener('click', function(){ filesInput.click(); });
+      sourceRow.appendChild(link);
+    } else {
+      var btn2 = document.createElement('button');
+      btn2.className = 'btn btn-primary';
+      btn2.textContent = 'Select folder…';
+      btn2.addEventListener('click', function(){ dirFallbackInput.click(); });
+      sourceRow.appendChild(btn2);
+
+      var sep2 = document.createElement('span');
+      sep2.className = 'sep';
+      sep2.textContent = 'or';
+      sourceRow.appendChild(sep2);
+
+      var link2 = document.createElement('button');
+      link2.className = 'link-btn';
+      link2.textContent = 'choose files instead';
+      link2.addEventListener('click', function(){ filesInput.click(); });
+      sourceRow.appendChild(link2);
+    }
+  }
+
+  async function pickFolderModern(){
+    try {
+      var dirHandle = await window.showDirectoryPicker();
+      var files = [];
+      for await (var entry of dirHandle.values()) {
+        if (entry.kind === 'file' && isImageFile(entry.name)) {
+          try {
+            var f = await entry.getFile();
+            files.push(f);
+          } catch(e) { /* skip unreadable file */ }
+        }
+      }
+      loadFiles(files);
+    } catch(e) {
+      // user cancelled the picker — no action needed
+    }
+  }
+
+  dirFallbackInput.addEventListener('change', function(e){
+    var files = Array.prototype.filter.call(e.target.files, function(f){ return isImageFile(f.name); });
+    loadFiles(files);
+    dirFallbackInput.value = '';
+  });
+  filesInput.addEventListener('change', function(e){
+    var files = Array.prototype.filter.call(e.target.files, function(f){ return isImageFile(f.name); });
+    loadFiles(files);
+    filesInput.value = '';
+  });
+
+  function loadFiles(files){
+    if (!files.length) return;
+    files.sort(naturalCompare);
+    allFiles = files;
+    excluded = new Set();
+    renderThumbGrid();
+    updateStartState();
+  }
+
+  clearBtn.addEventListener('click', function(){
+    allFiles = [];
+    excluded = new Set();
+    renderThumbGrid();
+    updateStartState();
+  });
+
+  function renderThumbGrid(){
+    thumbGrid.innerHTML = '';
+    if (!allFiles.length) {
+      thumbSummary.style.display = 'none';
+      emptyNote.style.display = 'block';
+      return;
+    }
+    emptyNote.style.display = 'none';
+    thumbSummary.style.display = 'flex';
+    allFiles.forEach(function(file, idx){
+      var url = URL.createObjectURL(file);
+      var cell = document.createElement('div');
+      cell.className = 'thumb';
+      cell.title = file.name;
+      var img = document.createElement('img');
+      img.src = url;
+      img.loading = 'lazy';
+      img.alt = file.name;
+      cell.appendChild(img);
+      cell.addEventListener('click', function(){
+        if (excluded.has(idx)) excluded.delete(idx); else excluded.add(idx);
+        cell.classList.toggle('deselected', excluded.has(idx));
+        updateThumbCount();
+        updateStartState();
+      });
+      thumbGrid.appendChild(cell);
+    });
+    updateThumbCount();
+  }
+
+  function updateThumbCount(){
+    var selectedN = allFiles.length - excluded.size;
+    thumbCount.innerHTML = '<b>' + selectedN + '</b> of ' + allFiles.length + ' image' + (allFiles.length === 1 ? '' : 's') + ' selected';
+  }
+
+  function updateStartState(){
+    var selectedN = allFiles.length - excluded.size;
+    if (selectedN > 0) {
+      startBtn.disabled = false;
+      startSummary.textContent = selectedN + ' image' + (selectedN === 1 ? '' : 's') + ' · ' + formatMMSS(duration) + ' each · ' + (shuffleOn ? 'shuffled' : 'sequential');
+    } else {
+      startBtn.disabled = true;
+      startSummary.textContent = 'Load images to begin';
+    }
+  }
+
+  /* ---------------- Duration presets ---------------- */
+  var PRESETS = [
+    { label: '30 sec', seconds: 30 },
+    { label: '1 min', seconds: 60 },
+    { label: '2 min', seconds: 120 },
+    { label: '5 min', seconds: 300 },
+    { label: '10 min', seconds: 600 },
+    { label: 'Custom', seconds: null }
+  ];
+  function buildPresetRow(){
+    presetRow.innerHTML = '';
+    PRESETS.forEach(function(p){
+      var btn = document.createElement('button');
+      btn.className = 'preset';
+      btn.textContent = p.label;
+      btn.dataset.seconds = p.seconds === null ? 'custom' : p.seconds;
+      if (p.seconds === 120) btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        Array.prototype.forEach.call(presetRow.children, function(c){ c.classList.remove('active'); });
+        btn.classList.add('active');
+        if (p.seconds === null) {
+          customRow.classList.remove('hidden');
+          applyCustomDuration();
+        } else {
+          customRow.classList.add('hidden');
+          duration = p.seconds;
+          durationWarn.style.display = 'none';
+          updateStartState();
+        }
+      });
+      presetRow.appendChild(btn);
+    });
+  }
+  function applyCustomDuration(){
+    var min = parseInt(customMin.value, 10) || 0;
+    var sec = parseInt(customSec.value, 10) || 0;
+    var total = min * 60 + sec;
+    if (total < 5) total = 5;
+    duration = total;
+    if (total > 1800) {
+      durationWarn.style.display = 'block';
+      durationWarn.textContent = 'That is over 30 minutes per image — make sure that is intentional.';
+    } else {
+      durationWarn.style.display = 'none';
+    }
+    updateStartState();
+  }
+  customMin.addEventListener('input', applyCustomDuration);
+  customSec.addEventListener('input', applyCustomDuration);
+
+  /* ---------------- Shuffle toggle ---------------- */
+  function toggleShuffle(){
+    shuffleOn = !shuffleOn;
+    shuffleSwitch.classList.toggle('on', shuffleOn);
+    shuffleSwitch.setAttribute('aria-checked', String(shuffleOn));
+    orderLabel.textContent = shuffleOn ? 'Shuffle — random order' : 'Sequential — folder order';
+    updateStartState();
+  }
+  shuffleSwitch.addEventListener('click', toggleShuffle);
+  shuffleSwitch.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleShuffle(); }
+  });
+
+  /* ---------------- Fisher–Yates ---------------- */
+  function shuffledIndices(n){
+    var arr = [];
+    for (var i = 0; i < n; i++) arr.push(i);
+    for (var j = arr.length - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var tmp = arr[j]; arr[j] = arr[k]; arr[k] = tmp;
+    }
+    return arr;
+  }
+
+  /* ---------------- Starting a session ---------------- */
+  startBtn.addEventListener('click', function(){
+    selectedFiles = allFiles.filter(function(_, idx){ return !excluded.has(idx); });
+    if (!selectedFiles.length) return;
+    beginSession(shuffleOn ? shuffledIndices(selectedFiles.length) : selectedFiles.map(function(_, i){ return i; }));
+  });
+
+  function beginSession(newOrder){
+    order = newOrder;
+    pos = 0;
+    visited = new Set();
+    playedMs = 0;
+    clearUrlCache();
+    showScreen('session');
+    goToPosition(0, /*resetTimer*/ true);
+    setPaused(false);
+    startRaf();
+  }
+
+  /* ---------------- Object URL management ---------------- */
+  function makeStaticGifUrl(rawUrl){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || 1;
+          canvas.height = img.naturalHeight || 1;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(function(blob){
+            if (blob) resolve(URL.createObjectURL(blob));
+            else resolve(null);
+          }, 'image/png');
+        } catch(e) { resolve(null); }
+      };
+      img.onerror = function(){ resolve(null); };
+      img.src = rawUrl;
+    });
+  }
+
+  async function prepareUrl(p){
+    if (p < 0 || p >= order.length) return null;
+    if (urlCache.has(p)) return urlCache.get(p).url;
+    var file = selectedFiles[order[p]];
+    var rawUrl = URL.createObjectURL(file);
+    var entry = { rawUrl: rawUrl, extraBlobUrl: null, url: rawUrl };
+    urlCache.set(p, entry);
+    if (isGif(file)) {
+      var staticUrl = await makeStaticGifUrl(rawUrl);
+      if (staticUrl && urlCache.get(p) === entry) {
+        entry.extraBlobUrl = staticUrl;
+        entry.url = staticUrl;
+      }
+    }
+    return urlCache.get(p) ? urlCache.get(p).url : rawUrl;
+  }
+
+  function releaseUrl(p){
+    var entry = urlCache.get(p);
+    if (!entry) return;
+    URL.revokeObjectURL(entry.rawUrl);
+    if (entry.extraBlobUrl) URL.revokeObjectURL(entry.extraBlobUrl);
+    urlCache.delete(p);
+  }
+
+  function pruneCache(centerPos){
+    urlCache.forEach(function(_, p){
+      if (Math.abs(p - centerPos) > 1) releaseUrl(p);
+    });
+  }
+
+  function clearUrlCache(){
+    urlCache.forEach(function(_, p){ releaseUrl(p); });
+    urlCache.clear();
+  }
+
+  /* ---------------- Navigation ---------------- */
+  var loadToken = 0;
+  async function goToPosition(newPos, resetTimer){
+    pos = newPos;
+    visited.add(pos);
+    var myToken = ++loadToken;
+    var url = await prepareUrl(pos);
+    if (myToken !== loadToken) return; // a newer navigation superseded this one
+    if (url) stageImg.src = url;
+    prepareUrl(pos + 1); // fire-and-forget preload of next
+    pruneCache(pos);
+    if (resetTimer) {
+      remainingMs = duration * 1000;
+      lastFrameTime = null;
+    }
+    updateNavButtons();
+    updateProgressNote();
+    updateRing();
+    updateTimerText();
+  }
+
+  function updateNavButtons(){
+    backBtn.disabled = pos <= 0;
+    nextBtn.disabled = false;
+  }
+  function updateProgressNote(){
+    progressNote.textContent = (pos + 1) + ' / ' + order.length;
+  }
+
+  function advance(auto){
+    if (pos >= order.length - 1) {
+      endSession();
+      return;
+    }
+    goToPosition(pos + 1, true);
+  }
+  function goBack(){
+    if (pos <= 0) return;
+    goToPosition(pos - 1, true);
+  }
+  function restartCurrentTimer(){
+    remainingMs = duration * 1000;
+    lastFrameTime = null;
+    updateRing();
+    updateTimerText();
+  }
+
+  /* ---------------- Timer loop ---------------- */
+  function updateTimerText(){
+    timerText.textContent = formatMMSS(remainingMs / 1000);
+  }
+  function updateRing(){
+    var frac = duration > 0 ? Math.max(0, remainingMs / (duration * 1000)) : 0;
+    var offset = ringCircumference * (1 - frac);
+    ringFill.style.strokeDashoffset = offset.toFixed(2);
+    ringFill.classList.toggle('low', frac <= 0.15);
+  }
+  function setPaused(v){
+    paused = v;
+    pauseIcon.style.display = paused ? 'none' : 'block';
+    playIcon.style.display = paused ? 'block' : 'none';
+    pauseBtn.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
+    lastFrameTime = null;
+  }
+  function tick(now){
+    if (!screens.session.classList.contains('active')) { rafId = null; return; }
+    if (!paused) {
+      if (lastFrameTime !== null) {
+        var delta = now - lastFrameTime;
+        remainingMs -= delta;
+        playedMs += delta;
+      }
+      lastFrameTime = now;
+      if (remainingMs <= 0) {
+        remainingMs = 0;
+        updateTimerText();
+        updateRing();
+        advance(true);
+        if (!screens.session.classList.contains('active')) { rafId = null; return; } // session ended
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+    } else {
+      lastFrameTime = null;
+    }
+    updateTimerText();
+    updateRing();
+    rafId = requestAnimationFrame(tick);
+  }
+  function startRaf(){
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+  function stopRaf(){
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  /* ---------------- Controls ---------------- */
+  pauseBtn.addEventListener('click', function(){ setPaused(!paused); });
+  nextBtn.addEventListener('click', function(){ advance(false); });
+  backBtn.addEventListener('click', goBack);
+  restartBtn.addEventListener('click', restartCurrentTimer);
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  exitBtn.addEventListener('click', function(){ requestExit(); });
+
+  function toggleFullscreen(){
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function(){});
+    } else {
+      document.exitFullscreen().catch(function(){});
+    }
+  }
+
+  function requestExit(){
+    var midway = pos > 0 || (order.length && visited.size > 0 && pos < order.length - 1);
+    var ok = true;
+    if (midway) {
+      ok = window.confirm('Exit this drawing session? Your progress on this set will be lost.');
+    }
+    if (ok) exitToSetup();
+  }
+
+  function exitToSetup(){
+    stopRaf();
+    clearUrlCache();
+    if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
+    showScreen('setup');
+  }
+
+  function endSession(){
+    stopRaf();
+    visited.add(pos);
+    endCount.textContent = visited.size;
+    endTime.textContent = formatLongTime(playedMs / 1000);
+    if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
+    showScreen('end');
+  }
+
+  restartSameBtn.addEventListener('click', function(){
+    showScreen('session');
+    beginSession(order.slice());
+  });
+  newShuffleBtn.addEventListener('click', function(){
+    showScreen('session');
+    beginSession(shuffleOn ? shuffledIndices(selectedFiles.length) : selectedFiles.map(function(_, i){ return i; }));
+  });
+  backToFolderBtn.addEventListener('click', function(){
+    showScreen('setup');
+  });
+
+  /* ---------------- Toolbar auto-hide (fullscreen only) ---------------- */
+  function showToolbar(){
+    toolbar.classList.remove('hidden');
+    exitCorner.classList.remove('hidden');
+    ringWrap.style.opacity = '1';
+    clearTimeout(inactivityTimer);
+    if (document.fullscreenElement) {
+      inactivityTimer = setTimeout(hideToolbar, 2800);
+    }
+  }
+  function hideToolbar(){
+    if (!document.fullscreenElement) return;
+    toolbar.classList.add('hidden');
+    exitCorner.classList.add('hidden');
+  }
+  stageEl.addEventListener('mousemove', showToolbar);
+  stageEl.addEventListener('touchstart', showToolbar);
+  document.addEventListener('fullscreenchange', function(){
+    if (document.fullscreenElement) {
+      showToolbar();
+    } else {
+      toolbar.classList.remove('hidden');
+      exitCorner.classList.remove('hidden');
+      clearTimeout(inactivityTimer);
+    }
+  });
+
+  /* ---------------- Keyboard shortcuts ---------------- */
+  document.addEventListener('keydown', function(e){
+    if (!screens.session.classList.contains('active')) return;
+    if (e.target && (e.target.tagName === 'INPUT')) return;
+    switch (e.key) {
+      case ' ':
+        e.preventDefault();
+        setPaused(!paused);
+        showToolbar();
+        break;
+      case 'ArrowRight':
+        advance(false);
+        showToolbar();
+        break;
+      case 'ArrowLeft':
+        goBack();
+        showToolbar();
+        break;
+      case 'f':
+      case 'F':
+        toggleFullscreen();
+        break;
+      case 'Escape':
+        if (!document.fullscreenElement) requestExit();
+        break;
+    }
+  });
+
+  /* ---------------- Init ---------------- */
+  buildSourceRow();
+  buildPresetRow();
+  renderThumbGrid();
+  updateStartState();
+})();
+</script>
+</body>
+</html>
